@@ -5,8 +5,12 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from cifar import Cifar100
 from graph_generator import GraphDataGenerator
 
+import random
+import numpy as np
+
+
 class CifarGraphDataset(Dataset):
-    def __init__(self, data_folder="../DATA/CIFARv2",
+    def __init__(self, data_folder="../DATA/CIFARv2Mini",
                        phase="train", 
                        n_segments=50, 
                        compactness=30, 
@@ -31,7 +35,7 @@ class CifarGraphDataset(Dataset):
     
 
 class CifarGraphLoader:
-    def __init__(self, data_folder="../DATA/CIFARv2",
+    def __init__(self, data_folder="../DATA/CIFARv2Mini",
                        phase="train",
                        batch_size=128,
                        shuffle=True,
@@ -76,5 +80,3 @@ class CifarGraphLoader:
 if __name__ == '__main__':
     loader = CifarGraphLoader()
     train_loader, test_loader = loader.load_data()
-    print(len(train_loader))
-    print(len(test_loader))

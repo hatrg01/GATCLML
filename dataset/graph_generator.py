@@ -7,9 +7,12 @@ from typing import List
 
 import numpy as np
 
+import torch
 from torch_geometric.data import Data
 
 from tqdm.auto import tqdm
+
+# np.seterr(divide='ignore', invalid='ignore')
 
 
 class GraphDataGenerator:
@@ -98,6 +101,7 @@ class GraphDataGenerator:
         for i in tqdm(range(len(images))):
             feature = self.rag_feature_extraction(segmentation_slic[i], images[i], n_node_features=n_node_features)
             node_features.append(feature)
+        return node_features 
 
 
     def prepare_data(self, node_features, edges, label):
@@ -112,7 +116,7 @@ class GraphDataGenerator:
         segmentation_slic, img_graphs, img_props = self.generate_graph(n_segments=n_segments, compactness=compactness, connectivity=connectivity)
         edges = self.generate_edges(img_graphs=img_graphs)
         node_features = self.generate_node_features(segmentation_slic=segmentation_slic, images=self.images, n_node_features=n_node_features)
-
+        
         D = []
         for i in range(len(node_features)):
             d = self.prepare_data(node_features[i], edges[i], self.image_labels[i])
