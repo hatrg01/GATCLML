@@ -11,7 +11,7 @@ class Cifar100:
         images = []
         image_names = []
         image_labels = []
-        print(f"Loading Cifar-100 dataset from dir : {self.data_dir}/{phase} !")
+        print(f"Loading Cifar-100 dataset from dir : {self.data_dir}/{self.phase} !")
         data_folder_path = os.path.join(self.data_dir, self.phase)
         for i, sub_folder in tqdm(enumerate(os.listdir(data_folder_path))):
             sub_folder_path = os.path.join(data_folder_path, sub_folder)

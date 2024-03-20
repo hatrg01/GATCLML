@@ -43,15 +43,17 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
         total_cross_entropy_loss = cross_entropy_loss(logits, labels)
         total_center_loss = center_loss(features, labels)
 
-        total_loss = total_cross_entropy_loss + total_center_loss
+        loss = total_cross_entropy_loss + total_center_loss
+        total_loss += loss.item()
 
-        total_loss.backward()
+        loss.backward()
         optimizer.step()
 
         _, train_predicted = torch.max(logits, 1)
         train_total += labels.size(0)
         train_correct += (train_predicted == labels).sum().item()
 
+    print(total_loss)
     train_loss = total_loss / n_iterations
     train_accuracy = (train_correct / train_total) * 100
 
@@ -75,7 +77,8 @@ def test_phase(model, test_loader, cross_entropy_loss, center_loss, device):
             total_cross_entropy_loss = cross_entropy_loss(logits, labels)
             total_center_loss = center_loss(features, labels)
 
-            total_loss = total_cross_entropy_loss + total_center_loss
+            loss = total_cross_entropy_loss + total_center_loss
+            total_loss += loss.item()
 
             _, test_predicted = torch.max(logits, 1)
             test_total += labels.size(0)
@@ -134,7 +137,7 @@ if __name__ == '__main__':
 
     for epoch in range(num_epochs):
         print()
-        print(f'Epoch [{epoch+1}/{NUM_EPOCHS}]:')
+        print(f'Epoch [{epoch+1}/{num_epochs}]:')
 
         train_loss, train_accuracy = train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer, device)
         print('Train Loss: {:.4f}, Train Accuracy: {:.4f}%' .format(train_loss, train_accuracy))

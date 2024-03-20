@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch_geometric.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from .cifar import Cifar100
@@ -17,6 +17,8 @@ class CifarGraphDataset(Dataset):
                        connectivity=2, 
                        n_node_features=97):
 
+        super().__init__()
+
         cifar100 = Cifar100(data_dir=data_folder, phase=phase)
         images, image_names, image_labels = cifar100.load_images()
 
@@ -26,11 +28,12 @@ class CifarGraphDataset(Dataset):
                                                             compactness=compactness, 
                                                             connectivity=connectivity, 
                                                             n_node_features=n_node_features)
+        # print(len(self.data_list), self.data_list[0].x.size(), self.data_list[0].edge_index.size(), self.data_list[0].x.dtype)
 
-    def __len__(self):
+    def len(self):
         return len(self.data_list)
 
-    def __getitem__(self, index):
+    def get(self, index):
         return self.data_list[index]
     
 
@@ -49,29 +52,17 @@ class CifarGraphLoader:
         self.test_size = test_size
 
     def load_data(self):
+
         train_dataset = CifarGraphDataset(data_folder=self.data_folder, phase="train")
         test_dataset = CifarGraphDataset(data_folder=self.data_folder, phase="test")
 
-        num_train = len(train_dataset)
-        indices = list(range(num_train))
-        random.shuffle(indices)
-
-        split = int(np.floor(self.test_size * num_train))
-
-        if self.shuffle:
-            np.random.seed(self.random_seed)
-            np.random.seed(indices)
-
-        train_idx, test_idx = indices[split:], indices[:split]
-        train_sampler = SubsetRandomSampler(train_idx)
-        test_sampler = SubsetRandomSampler(test_idx)
 
         train_loader = DataLoader(
-            dataset=train_dataset, batch_size=self.batch_size, sampler=train_sampler
+            dataset=train_dataset, batch_size=self.batch_size, shuffle=self.shuffle
         )
 
         test_loader = DataLoader(
-            dataset=test_dataset, batch_size=1, sampler=test_sampler
+            dataset=test_dataset, batch_size=1, shuffle=False
         )
 
         return (train_loader, test_loader)
