@@ -3,7 +3,7 @@ import cv2
 from tqdm.auto import tqdm
 
 class Cifar100:
-    def __init__(self, data_dir='../DATA/CIFARv2Mini', phase='train'):
+    def __init__(self, data_dir='./DATA/CIFARv2Mini', phase='train'):
         self.data_dir = data_dir
         self.phase = phase
 
@@ -11,7 +11,7 @@ class Cifar100:
         images = []
         image_names = []
         image_labels = []
-        print(f"Loading Cifar-100 dataset from dir : {self.data_dir} !")
+        print(f"Loading Cifar-100 dataset from dir : {self.data_dir}/{phase} !")
         data_folder_path = os.path.join(self.data_dir, self.phase)
         for i, sub_folder in tqdm(enumerate(os.listdir(data_folder_path))):
             sub_folder_path = os.path.join(data_folder_path, sub_folder)
