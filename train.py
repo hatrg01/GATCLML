@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--n_classes', type=int, default=10, help="number of classes")
 parser.add_argument('--device', type=str, default='cuda', help="cuda or cpu")
-parser.add_argument('--n_epoches', type=int, default=1, help="number of epoches")
+parser.add_argument('--n_epoches', type=int, default=2, help="number of epoches")
 parser.add_argument('--batch_size', type=int, default=64, help="size of each batch")
 parser.add_argument('--learning_rate', type=float, default=0.001, help="learning rate")
 parser.add_argument('--n_heads', type=int, default=8, help="number of heads each GAT layer")
@@ -41,11 +41,11 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
         
         # print(labels)
         # print(data)
-        print()
-        print("=================")
+        # print()
+        # print("=================")
         # print(data.batch.size())
 
-        optimizer.zero_grad()
+        
 
         features, logits = model(data.x, data.edge_index, data.batch)
 
@@ -66,6 +66,7 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
         # print(loss.item())
         total_loss += loss.item()
 
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 

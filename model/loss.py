@@ -24,6 +24,6 @@ class CenterLoss(nn.Module):
             new_centers[label] = center
             self.centers = nn.Parameter(new_centers)
 
-            centers_batch = torch.index_select(torch.tensor(self.centers), dim=0, index=labels)
+            centers_batch = torch.index_select(self.centers, dim=0, index=labels)
             center_loss = torch.mean(torch.norm(x - centers_batch, p=2, dim=1))
         return self.alpha * center_loss
