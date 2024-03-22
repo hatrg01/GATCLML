@@ -4,3 +4,6 @@ pip install torch-sparse -f https://pytorch-geometric.com/whl/torch-2.1.0+cu121.
 
 MKDIR ./DATA
 unzip /content/drive/MyDrive/RESEARCH/DATA/CIFARv2Mini.zip -d ./DATA
+
+MKDIR ./GRAPHDATA
+unzip /content/drive/MyDrive/RESEARCH/DATA/CifarGraphData.zip -d ./GRAPHDATA

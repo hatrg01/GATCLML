@@ -1,12 +1,15 @@
 import torch
-from torch_geometric.data import Dataset, DataLoader
+from torch_geometric.data import Dataset
+from torch_geometric.loader import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from .cifar import Cifar100
 from .graph_generator import GraphDataGenerator
 
+import os
 import random
 import numpy as np
+import pickle
 
 
 class CifarGraphDataset(Dataset):
@@ -15,23 +18,34 @@ class CifarGraphDataset(Dataset):
                        n_segments=50, 
                        compactness=30, 
                        connectivity=2, 
-                       n_node_features=97):
+                       n_node_features=97,
+                       pre_data_list_dir='./GRAPHDATA/graph_data_list'):
 
         super().__init__()
 
-        cifar100 = Cifar100(data_dir=data_folder, phase=phase)
-        images, image_names, image_labels = cifar100.load_images()
+        self.data_list = []
+        self.pre_data_list_dir = f"{pre_data_list_dir}_{phase}.pkl"
 
-        data_generator = GraphDataGenerator(images=images, image_names=image_names, image_labels=image_labels)
+        if os.path.exists(self.pre_data_list_dir):
+            print(f"LOADING GRAPH DATA FROM DIR : {self.pre_data_list_dir} !")
+            self.data_list = pickle.load(open(self.pre_data_list_dir, 'rb'))
+        else:
+            cifar100 = Cifar100(data_dir=data_folder, phase=phase)
+            images, image_names, image_labels = cifar100.load_images()
 
-        self.data_list = data_generator.generate_graph_dataset(n_segments=n_segments, 
-                                                            compactness=compactness, 
-                                                            connectivity=connectivity, 
-                                                            n_node_features=n_node_features)
-        # print(len(self.data_list), self.data_list[0].x.size(), self.data_list[0].edge_index.size(), self.data_list[0].x.dtype)
+            data_generator = GraphDataGenerator(images=images, image_names=image_names, image_labels=image_labels)
+
+            self.data_list = data_generator.generate_graph_dataset(n_segments=n_segments, 
+                                                                compactness=compactness, 
+                                                                connectivity=connectivity, 
+                                                                n_node_features=n_node_features)
+            pickle.dump(self.data_list, open(f"/content/drive/MyDrive/RESEARCH/DATA/graph_data_list_{phase}.pkl", 'wb'))
+            print("SAVING GRAPH DATA !")
+
 
     def len(self):
         return len(self.data_list)
+
 
     def get(self, index):
         return self.data_list[index]

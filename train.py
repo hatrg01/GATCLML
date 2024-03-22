@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--n_classes', type=int, default=10, help="number of classes")
 parser.add_argument('--device', type=str, default='cuda', help="cuda or cpu")
-parser.add_argument('--n_epoches', type=int, default=20, help="number of epoches")
+parser.add_argument('--n_epoches', type=int, default=1, help="number of epoches")
 parser.add_argument('--batch_size', type=int, default=64, help="size of each batch")
 parser.add_argument('--learning_rate', type=float, default=0.001, help="learning rate")
 parser.add_argument('--n_heads', type=int, default=8, help="number of heads each GAT layer")
@@ -37,13 +37,33 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
     for data in tqdm(train_loader):
         data = data.to(device)
         labels = data.y
+
+        
+        # print(labels)
+        # print(data)
+        print()
+        print("=================")
+        # print(data.batch.size())
+
         optimizer.zero_grad()
 
         features, logits = model(data.x, data.edge_index, data.batch)
-        total_cross_entropy_loss = cross_entropy_loss(logits, labels)
-        total_center_loss = center_loss(features, labels)
 
-        loss = total_cross_entropy_loss + total_center_loss
+        # print("=================")
+        # print(features[0])
+
+        loss = cross_entropy_loss(logits, labels)
+        # total_cross_entropy_loss = cross_entropy_loss(logits, labels)
+        # total_center_loss = center_loss(features, labels)
+
+        # print("=================")
+        # print("Center loss : ", total_center_loss.item())
+        # print("Cross entropy loss : ", total_cross_entropy_loss.item())
+
+        # loss = total_cross_entropy_loss + total_center_loss
+        # print("=================")
+        # print(loss)
+        # print(loss.item())
         total_loss += loss.item()
 
         loss.backward()
@@ -53,7 +73,7 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
         train_total += labels.size(0)
         train_correct += (train_predicted == labels).sum().item()
 
-    print(total_loss)
+    # print(total_loss)
     train_loss = total_loss / n_iterations
     train_accuracy = (train_correct / train_total) * 100
 
@@ -92,10 +112,12 @@ def test_phase(model, test_loader, cross_entropy_loss, center_loss, device):
 
 if __name__ == '__main__':
 
+    device = None
     if args.device == 'cuda' and torch.cuda.is_available():
         device = torch.device(args.device)
     else:
         device = torch.device('cpu')
+    print(device)
 
     in_features = args.in_features
     hidden_dim = args.hidden_dim
@@ -110,20 +132,33 @@ if __name__ == '__main__':
     loader = CifarGraphLoader()
     train_loader, test_loader = loader.load_data()
 
+    print("Number of batch in train loader : ", len(train_loader))
+    print("Number of batch in test loader : ", len(test_loader))
+
     model = GATCLML(in_features=in_features, 
                                     hidden_dim=hidden_dim, 
                                     out_features=out_features, 
                                     num_classes=num_classes, 
                                     num_heads=num_heads)
+    model.to(device)
 
     cross_entropy_loss = nn.CrossEntropyLoss()
-    center_loss = CenterLoss(num_classes=num_classes, feat_dim=out_features, alpha=alpha)
+    center_loss = CenterLoss(num_classes=num_classes, feat_dim=out_features, alpha=alpha).to(device)
 
-    optimizer = torch.optim.Adam([
-        {'params': model.gat.parameters()},
-        {'params': model.metric_learning.parameters()},
-        {'params': model.classifier.parameters()},
-        {'params': center_loss.parameters(), 'lr': 0.005}],
+    # optimizer = torch.optim.Adam([
+    #     {'params': model.gat.parameters()},
+    #     {'params': model.metric_learning.parameters()},
+    #     {'params': model.classifier.parameters()},
+    #     {'params': center_loss.parameters(), 'lr': 0.005}],
+    #     lr=learning_rate
+    # )
+
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        # {'params': model.gat.parameters()},
+        # {'params': model.metric_learning.parameters()},
+        # {'params': model.classifier.parameters()},
+        # {'params': center_loss.parameters(), 'lr': 0.005}],
         lr=learning_rate
     )
 
