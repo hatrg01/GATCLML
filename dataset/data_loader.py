@@ -1,7 +1,6 @@
 import torch
 from torch_geometric.data import Dataset
 from torch_geometric.loader import DataLoader
-from torch.utils.data.sampler import SubsetRandomSampler
 
 from .cifar import Cifar100
 from .graph_generator import GraphDataGenerator
@@ -10,6 +9,10 @@ import os
 import random
 import numpy as np
 import pickle
+
+from torch_geometric.utils import to_networkx, from_networkx
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class CifarGraphDataset(Dataset):
@@ -80,3 +83,47 @@ class CifarGraphLoader:
         )
 
         return (train_loader, test_loader)
+
+
+# if __name__ == '__main__':
+#     # loader = CifarGraphLoader()
+#     # train_loader, test_loader = loader.load_data()
+
+#     # print("Number of batch in train loader : ", len(train_loader))
+#     # print("Number of batch in test loader : ", len(test_loader))
+
+#     # for step, data in enumerate(train_loader):
+#     #     print(f'Step {step + 1}:')
+#     #     print('=======')
+#     #     print(f'Number of graphs in the current batch: {data.num_graphs}')
+#     #     print(data)
+#     #     print()
+
+#     data_list = pickle.load(open("../GRAPHDATA/graph_data_list_train.pkl", 'rb'))
+
+#     D = data_list[1000]
+
+#     print(D)
+
+#     # print(D.edge_index)
+
+#     G = to_networkx(D, to_undirected=True)
+#     # nx.draw(G)
+
+
+#     # G = nx.Graph()
+#     # G.add_node(1)
+#     # G.add_nodes_from([2, 3])
+#     # G.add_nodes_from([
+#     #     (4, {"color": "red"}),
+#     #     (5, {"color": "green"}),
+#     # ])
+#     # G.add_edge(1, 2)
+#     # e = (2, 3)
+#     # G.add_edge(*e)
+
+#     nx.draw(G, with_labels=True, font_weight='bold')
+#     # plt.show(block=False)
+#     plt.savefig("Graph.png", format="PNG")
+
+

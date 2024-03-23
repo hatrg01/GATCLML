@@ -3,6 +3,9 @@ import argparse
 import torch
 import torch.nn as nn
 
+from torch_geometric.datasets import TUDataset
+from torch_geometric.loader import DataLoader
+
 from model.model import GATCLML
 from model.loss import CenterLoss
 from model.utils import plot_his
@@ -35,7 +38,7 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
     train_total = 0
 
     for data in tqdm(train_loader):
-        data = data.to(device)
+        # data = data.to(device)
         labels = data.y
 
         
@@ -47,12 +50,14 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
 
         
 
-        features, logits = model(data.x, data.edge_index, data.batch)
+        # features, logits = model(data.x, data.edge_index, data.batch)
+        out = model(data.x, data.edge_index, data.batch)
 
         # print("=================")
         # print(features[0])
 
-        loss = cross_entropy_loss(logits, labels)
+        # loss = cross_entropy_loss(logits, labels)
+        loss = cross_entropy_loss(out, data.y)
         # total_cross_entropy_loss = cross_entropy_loss(logits, labels)
         # total_center_loss = center_loss(features, labels)
 
@@ -70,9 +75,10 @@ def train_phase(model, train_loader, cross_entropy_loss, center_loss, optimizer,
         loss.backward()
         optimizer.step()
 
-        _, train_predicted = torch.max(logits, 1)
-        train_total += labels.size(0)
-        train_correct += (train_predicted == labels).sum().item()
+        # _, train_predicted = torch.max(logits, 1)
+        _, train_predicted = torch.max(out, 1)
+        train_total += data.y.size(0)
+        train_correct += (train_predicted == data.y).sum().item()
 
     # print(total_loss)
     train_loss = total_loss / n_iterations
@@ -91,19 +97,21 @@ def test_phase(model, test_loader, cross_entropy_loss, center_loss, device):
 
     with torch.no_grad():
         for data in tqdm(test_loader):
-            data = data.to(device)
+            # data = data.to(device)
             labels = data.y
 
-            features, logits = model(data.x, data.edge_index, data.batch)
-            total_cross_entropy_loss = cross_entropy_loss(logits, labels)
-            total_center_loss = center_loss(features, labels)
+            # features, logits = model(data.x, data.edge_index, data.batch)
+            out = model(data.x, data.edge_index, data.batch)
+            loss = cross_entropy_loss(out, labels)
+            # total_cross_entropy_loss = cross_entropy_loss(logits, labels)
+            # total_center_loss = center_loss(features, labels)
 
-            loss = total_cross_entropy_loss + total_center_loss
+            # loss = total_cross_entropy_loss + total_center_loss
             total_loss += loss.item()
 
-            _, test_predicted = torch.max(logits, 1)
-            test_total += labels.size(0)
-            test_correct += (test_predicted == labels).sum().item()
+            _, test_predicted = torch.max(out, 1)
+            test_total += data.y.size(0)
+            test_correct += (test_predicted == data.y).sum().item()
 
     test_loss = total_loss / n_iterations
     test_accuracy = (test_correct / test_total) * 100
@@ -133,15 +141,30 @@ if __name__ == '__main__':
     loader = CifarGraphLoader()
     train_loader, test_loader = loader.load_data()
 
+    # dataset = TUDataset(root='data/TUDataset', name='MUTAG')
+
+    # torch.manual_seed(12345)
+    # dataset = dataset.shuffle()
+
+    # train_dataset = dataset[:150]
+    # test_dataset = dataset[150:]
+
+    # train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+    # test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+
     print("Number of batch in train loader : ", len(train_loader))
     print("Number of batch in test loader : ", len(test_loader))
 
-    model = GATCLML(in_features=in_features, 
-                                    hidden_dim=hidden_dim, 
-                                    out_features=out_features, 
-                                    num_classes=num_classes, 
-                                    num_heads=num_heads)
-    model.to(device)
+    # model = GATCLML(in_features=in_features, 
+    #                                 hidden_dim=hidden_dim, 
+    #                                 out_features=out_features, 
+    #                                 num_classes=num_classes, 
+    #                                 num_heads=num_heads)
+    
+    model = GATCLML(in_channels=in_features, 
+                                    hidden_channels=hidden_dim, 
+                                    out_features=num_classes)
+    # model.to(device)
 
     cross_entropy_loss = nn.CrossEntropyLoss()
     center_loss = CenterLoss(num_classes=num_classes, feat_dim=out_features, alpha=alpha).to(device)
